@@ -628,12 +628,24 @@ function safeSetField(form, fieldName, value) {
   }
 }
 
-  // Helper to map multiple role checkboxes → one shared PDF checkbox
+// Helper to map multiple role checkboxes → one shared PDF checkbox
 function mapSharedCheckboxToPdf(pdfDoc, pdfFieldName, htmlIds) {
+  // **NEW LOGIC: Check if the main 'Update Customer Details' section is enabled**
+  const updateDetailsEnabled = document.getElementById("Updatedetails")?.checked;
+  if (!updateDetailsEnabled) {
+      try {
+          // If the main section is unticked, force the shared PDF checkbox to uncheck.
+          pdfDoc.getForm().getCheckBox(pdfFieldName).uncheck();
+      } catch (e) {}
+      return; // Stop here, don't check child elements
+  }
+
+  // OLD LOGIC: Only proceed if the main parent section is ticked
   const anyChecked = htmlIds.some(id => {
     const el = document.getElementById(id);
     return el && el.checked;
   });
+  
   try {
     const field = pdfDoc.getForm().getCheckBox(pdfFieldName);
     if (anyChecked) field.check();
