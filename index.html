@@ -641,10 +641,23 @@ function mapSharedCheckboxToPdf(pdfDoc, pdfFieldName, htmlIds) {
   }
 
   // OLD LOGIC: Only proceed if the main parent section is ticked
-  const anyChecked = htmlIds.some(id => {
-    const el = document.getElementById(id);
-    return el && el.checked;
-  });
+// NEW LOGIC: Only proceed if the main parent section is ticked
+const anyChecked = htmlIds.some(id => {
+  const el = document.getElementById(id);
+  
+  // Determine the controlling Role checkbox ID based on the element ID
+  let roleControllerId;
+  if (id.includes("Insured")) roleControllerId = "Simple_Update_Insured";
+  else if (id.includes("PO")) roleControllerId = "Simple_Update_PO";
+  else if (id.includes("Nominee")) roleControllerId = "Simple_Update_Nominee";
+  
+  const roleController = document.getElementById(roleControllerId);
+
+  // A shared field is considered checked ONLY IF:
+  // 1. The individual detail checkbox is checked (el.checked)
+  // 2. The corresponding Role checkbox is checked (roleController?.checked)
+  return el && el.checked && roleController && roleController.checked;
+});
   
   try {
     const field = pdfDoc.getForm().getCheckBox(pdfFieldName);
