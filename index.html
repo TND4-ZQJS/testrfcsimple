@@ -1,0 +1,1205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Request For Change of Customer Details and Payment Method</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#fff; --accent:#007aff; --muted:#666; --line:#e9e9ee;
+  }
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;margin:18px;background:var(--bg);color:#111}
+  main{max-width:980px;margin:0 auto;background:var(--card);padding:18px;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,0.06)}
+  h1{margin:15px 0 35px 0;font-size:1.50rem}
+  .section{background:#fbfbfd;border:1px solid #eee;padding:14px;border-radius:10px;margin:12px 0}
+  .section h2{margin:0 0 10px 0;font-size:1.05rem}
+  label{display:block;margin:8px 0;font-size:0.95rem}
+  .info-label {font-weight: bold;}
+  input[type=text],input[type=number],select,textarea{
+    width:100%;padding:10px;border-radius:10px;border:1px solid #ddd;margin-top:6px;font-size:1rem;background:#fff
+  }
+  h3{margin:20px 0 5px 0;font-size:1.00rem}
+  textarea{resize:vertical;min-height:120px}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0}
+  .muted{color:var(--muted);font-size:0.85rem}
+  button{background:var(--accent);color:#fff;border:0;padding:10px 14px;border-radius:10px;cursor:pointer}
+  button.secondary{background:#999}
+  button.ghost{background:transparent;border:1px solid var(--line);color:#333}
+  .actions{display:flex;gap:12px;align-items:center}
+
+  .grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+@media (max-width: 600px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+  #scrollTopBtn {
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: #007aff; /* iOS blue */
+  color: #fff;
+  cursor: pointer;
+  display: none; /* hidden by default */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+  z-index: 999;
+}
+
+#scrollTopBtn svg {
+  pointer-events: none; /* icon doesn't block click */
+}
+
+#scrollTopBtn.show {
+  display: flex; /* show with flex centering */
+  opacity: 1;
+}
+
+
+  /* Signature preview tiles */
+  .sig-preview{
+    width:100%; height:150px; border:1px dashed #bbb; border-radius:10px;
+    display:flex; align-items:center; justify-content:center; background:#fff; cursor:pointer; position:relative;
+  }
+  .sig-preview img{ max-width:100%; max-height:100%; object-fit:contain; }
+  .sig-preview span{ color:#999; }
+
+  /* Signature Modal */
+  .sig-modal{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000; }
+  .sig-modal .box{
+    width:min(560px, 92vw); background:#fff; margin:6vh auto; padding:14px; border-radius:12px;
+    box-shadow:0 18px 50px rgba(0,0,0,.25)
+  }
+  .sig-modal h3{ margin:0 0 8px 0; }
+  /* NOTE: canvas is responsive via CSS; internal pixels are set in JS for crispness */
+  #sigCanvas{ width:100%; height:220px; background:#fff; border:1px solid #ddd; border-radius:10px; touch-action:none }
+  .sig-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:10px; }
+
+  /* Hidden signature XY tuning inputs (owner/witness) */
+  .hidden-inputs {display: none;}
+
+  /* Preview pane */
+  .preview{background:#fff;border:1px solid #eee;border-radius:10px;padding:10px}
+  .preview canvas{width:100%;height:auto;border-radius:8px}
+
+  /* Save indicator */
+  #saveStatus{
+    position:fixed; top:12px; right:12px; background:var(--accent); color:#fff;
+    padding:6px 10px; border-radius:8px; font-size:0.85rem; opacity:0; transition:opacity .25s;
+  }
+
+  @media (max-width:720px){
+    .policy-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Request For Change of Customer Details and Payment Method (LF5188)</h1>
+
+  <!-- SECTION: Policy Info -->
+  <section class="section">
+    <h2>Policy Information</h2>
+
+    <label>Policy No.
+      <input id="Simple_BasicInfo_PolicyNo" class="persist" type="text" placeholder="Enter policy no.">
+    </label>
+
+    <div class="row">
+      <label style="flex:1">Insured's Name
+        <input id="Simple_BasicInfo_InsuredName" class="persist" type="text" placeholder="Enter name">
+      </label>
+    </div>
+    <div class="row">
+      <label style="flex:1">Insured's IC No.
+        <input id="Simple_BasicInfo_InsuredNIRC" class="persist" type="text" placeholder="e.g. 900101-14-1234">
+      </label>
+    </div>
+  </section>
+
+ <!-- SECTION: User Options -->
+  <section class="section">
+     <label>Choose one or more request <small class="muted">(only request that is "checked in the box" will appear)</small></label>
+    <div id="UserOption" class="grid-2">
+      <div>
+        <label class="info-label"><input id="Updatedetails" class="persist" type="checkbox">A. Update Customer Details</label>
+      </div>
+      <div>
+        <label class="info-label"><input id="Changepaymentmode" class="persist" type="checkbox">B. Change of Payment Mode</label>
+      </div>
+      <div>
+        <label class="info-label"><input id="Changepaymentmethod" class="persist" type="checkbox">C. Change of Payment Method</label>
+      </div>
+      <div>
+        <label class="info-label"><input id="Changesignature" class="persist" type="checkbox">D. Change of Signature</label>
+      </div>
+      <div>
+        <label class="info-label"><input id="Others" class="persist" type="checkbox">E. Others</label>
+      </div>
+    </div>
+</section>
+
+
+  <!-- SECTION: Update Customer Details -->
+  <section class="section" id="UpdateDetails">
+    <h2>A. Update Customer Details</h2>
+    <small class="muted">Documentary proof is required, i.e. Birth Certificate/Identity Card/Passport.</small>
+
+    <div class="row">
+    <label class="info-label">Customer's Role <small class="muted">(choose one or more to update)</small></label>
+    </div>
+        <div class="row">
+      <label class="inline"><input class="persist" id="Simple_Update_Insured" type="checkbox">Insured</label>
+      <label class="inline"><input class="persist" id="Simple_Update_PO" type="checkbox">Policy Owner</label>
+      <label class="inline"><input class="persist" id="Simple_Update_Nominee" type="checkbox">Nominee/Assignee/Trustee</label>
+        </div>
+     
+
+       <section class="section" id="UpdateInsuredDetails">
+    <h3>Insured - Update Details</h3>
+        <div class="row"> 
+      <label class="inline"><input class="persist" id="Simple_Update_Name" type="checkbox">Name</label>
+          <small class="muted">(tick checkbox before key in)</small><input class="persist" id="Simple_Update_InsuredName" type="text" placeholder="Enter insured's name">
+        </div>
+        <div class="row">
+      <label class="inline"><input class="persist" id="Simple_Update_DOB" type="checkbox">Date of Birth</label>
+          <small class="muted">(tick checkbox before key in)</small><input class="persist" id="Simple_Update_InsuredDOB" type="text" placeholder="Enter insured's DOB">
+        </div>
+          <div class="row">
+      <label class="inline"><input class="persist" id="Simple_Update_NIRC" type="checkbox">IC/BC/Passport No.</label>
+          <small class="muted">(tick checkbox before key in)</small><input class="persist" id="Simple_Update_InsuredNIRC" type="text" placeholder="Enter insured's IC/BC/Passport">
+        </div>
+        <div class="row">
+          <div class="row">
+      <label class="inline"><input class="persist" id="Simple_Update_Sex" type="checkbox">Sex</label>
+          <small class="muted">(tick checkbox before key in)</small><input class="persist" id="Simple_Update_InsuredSex" type="text" placeholder="Enter insured's sex">
+        </div>
+         <div class="row">
+         <label class="inline"><input class="persist" id="Simple_Update_Country" type="checkbox">Country of Birth</label>
+         <small class="muted">(tick checkbox before key in)</small><input class="persist" id="Simple_Update_InsuredCountry" type="text" placeholder="Enter insured's Country of Birth">
+         </div>
+         <div class="row">
+         <label class="inline"><input class="persist" id="Simple_Update_Nationality" type="checkbox">Nationality</label>
+          <small class="muted">(tick checkbox before key in)</small><input class="persist" id="Simple_Update_InsuredNationality" type="text" placeholder="Enter insured's nationality">
+         </div>
+    </section>
+
+        <section class="section" id="UpdatePODetails">
+    <h3>Policy Owner - Update Details</h3>
+        <div class="row"> 
+      <label class="inline"><input class="persist" id="Simple_Update_Name" type="checkbox">Name</label>
+          <small class="muted">(tick checkbox before key in)</small><input class="persist" id="Simple_Update_POName" type="text" placeholder="Enter policy owner's name">
+        </div>
+        <div class="row">
+      <label class="inline"><input class="persist" id="Simple_Update_DOB" type="checkbox">Date of Birth</label>
+          <small class="muted">(tick checkbox before key in)</small><input class="persist" id="Simple_Update_PODOB" type="text" placeholder="Enter policy owner's DOB">
+        </div>
+        <div class="row">
+      <label class="inline"><input class="persist" id="Simple_Update_NIRC" type="checkbox">IC/BC/Passport No.</label>
+          <small class="muted">(tick checkbox before key in)</small><input class="persist" id="Simple_Update_PONIRC" type="text" placeholder="Enter policy owner's IC/BC/Passport">
+        </div>
+        <div class="row">
+      <label class="inline"><input class="persist" id="Simple_Update_Sex" type="checkbox">Sex</label>
+          <small class="muted">(tick checkbox before key in)</small><input class="persist" id="Simple_Update_POSex" type="text" placeholder="Enter policy owner's sex">
+        </div>
+         <div class="row">
+         <label class="inline"><input class="persist" id="Simple_Update_Country" type="checkbox">Country of Birth</label>
+          <small class="muted">(tick checkbox before key in)</small><input class="persist" id="Simple_Update_POCountry" type="text" placeholder="Enter policy owner's Country of Birth">
+         </div>
+         <div class="row">
+         <label class="inline"><input class="persist" id="Simple_Update_Nationality" type="checkbox">Nationality</label>
+          <small class="muted">(tick checkbox before key in)</small><input class="persist" id="Simple_Update_PONationality" type="text" placeholder="Enter policy owner's nationality">
+         </div>
+    </section>
+
+        <section class="section" id="UpdateNomineeDetails">
+    <h3>Nominee/Trustee/Assignee - Update Details</h3>
+        <div class="row"> 
+      <label class="inline"><input class="persist" id="Simple_Update_Name" type="checkbox">Name</label>
+          <small class="muted">(tick checkbox before key in)</small><input class="persist" id="Simple_Update_NomineeName" type="text" placeholder="Enter nominee/trustee/assignee's name">
+        </div>
+        <div class="row">
+      <label class="inline"><input class="persist" id="Simple_Update_DOB" type="checkbox">Date of Birth</label>
+          <small class="muted">(tick checkbox before key in)</small><input class="persist" id="Simple_Update_NomineeDOB" type="text" placeholder="Enter nominee/trustee/assignee's DOB">
+        </div>
+        <div class="row">
+      <label class="inline"><input class="persist" id="Simple_Update_NIRC" type="checkbox">IC/BC/Passport No.</label>
+          <small class="muted">(tick checkbox before key in)</small><input class="persist" id="Simple_Update_NomineeNIRC" type="text" placeholder="Enter nominee/trustee/assignee's IC/BC/Passport">
+        </div>
+        <div class="row">
+      <label class="inline"><input class="persist" id="Simple_Update_Sex" type="checkbox">Sex</label>
+          <small class="muted">(tick checkbox before key in)</small><input class="persist" id="Simple_Update_NomineeSex" type="text" placeholder="Enter nominee/trustee/assignee's sex">
+        </div>
+         <div class="row">
+         <label class="inline"><input class="persist" id="Simple_Update_Country" type="checkbox">Country of Birth</label>
+          <small class="muted">(tick checkbox before key in)</small><input class="persist" id="Simple_Update_NomineeCountry" type="text" placeholder="Enter nominee/trustee/assignee's Country of Birth">
+         </div>
+         <div class="row">
+         <label class="inline"><input class="persist" id="Simple_Update_Nationality" type="checkbox">Nationality</label>
+          <small class="muted">(tick checkbox before key in)</small><input class="persist" id="Simple_Update_NomineeNationality" type="text" placeholder="Enter nominee/trustee/assignee's nationality">
+         </div>
+    </section>
+
+  </section>
+
+    <!-- SECTION: Change of Payment Mode -->
+  <section class="section" id="ChangePaymentModeSection">
+    <h2>B. Change of Payment Mode</h2>
+    <div id="UserOption" class="grid-2">
+      <div>
+        <label class="inline"><input id="Simple_Payment_Annual" class="persist"  name="Paymentmodetype" type="radio">Annual</label>
+      </div>
+      <div>
+        <label class="inline"><input id="Simple_Payment_SemiAnnual" class="persist"  name="Paymentmodetype" type="radio">Semi-Annual</label>
+      </div>
+           <div>
+        <label class="inline"><input id="Simple_Payment_Quarterly" class="persist"  name="Paymentmodetype" type="radio">Quarterly</label>
+      </div>
+           <div>
+        <label class="inline"><input id="Simple_Payment_Monthly" class="persist"  name="Paymentmodetype" type="radio">Monthly</label>
+      </div>
+    </div>
+  </section>
+
+    <!-- SECTION: Change of Payment Type -->
+  <section class="section" id="ChangePaymentMethodSection">
+    <h2>C. Change of Payment Method</h2>
+    <div id="UserOption" class="grid-2">
+      <div>
+        <label class="inline"><input id="Simple_Payment_Internet" class="persist"  name="Paymentmethodtype" type="radio">Internet Banking</label>
+      </div>
+      <div>
+        <label class="inline"><input id="Simple_Payment_FPX" class="persist" name="Paymentmethodtype" type="radio">Direct Debit (FPX)</label>
+      </div>
+    </div>
+  </section>
+  
+  <!-- SECTION: Change Signature -->
+  <section class="section" id="ChangeSignatureSection">
+    <h2>D. Change of Signature</h2>
+    <div id="UserOption" class="grid-2">
+      <div>
+        <label class="inline"><input id="Simple_ChangeSig_Insured" class="persist"  name="Changesignature" type="radio">Insured</label>
+      </div>
+      <div>
+        <label class="inline"><input id="Simple_ChangeSig_PO" class="persist"  name="Changesignature" type="radio">Policy Owner</label>
+      </div>
+           <div>
+        <label class="inline"><input id="Simple_ChangeSig_Assignee" class="persist"  name="Changesignature" type="radio">Assignee</label>
+      </div>
+           <div>
+        <label class="inline"><input id="Simple_ChangeSig_Trustee" class="persist"  name="Changesignature" type="radio">Trustee</label>
+      </div>
+    </div>
+
+      <div class="sig-preview" id="preview_simple_oldsig" onclick="openSig('simple_oldsig')">
+      <span>Tap to Sign (Old Signature)</span>
+    </div>
+    <div class="row">
+      <button id="clearPreview_Simple_Oldsig" class="secondary" type="button">Clear Signature</button>
+    </div>
+
+      <div class="sig-preview" id="preview_simple_newsig" onclick="openSig('simple_newsig')">
+      <span>Tap to Sign (New Signature)</span>
+    </div>
+    <div class="row">
+      <button id="clearPreview_Simple_Newsig" class="secondary" type="button">Clear Signature</button>
+    </div>
+  </section>
+
+   <!-- SECTION: Others -->
+  <section class="section" id="OtherSection">
+    <h2>E. Others</h2>
+    <div class="row">
+      <input id="Simple_Update_Others_Line1" class="persist" type="text" placeholder="Line 1">
+      </div>
+      <div class="row">
+      <input id="Simple_Update_Others_Line2" class="persist" type="text" placeholder="Line 2">
+      </div>
+      <div class="row">
+      <input id="Simple_Update_Others_Line3" class="persist" type="text" placeholder="Line 3">
+      </div>
+      <div class="row">
+      <input id="Simple_Update_Others_Line4" class="persist" type="text" placeholder="Line 4">
+      </div>
+  </section>
+    
+    
+  <!-- SECTION: Signature Details (Date/Place) -->
+  <section class="section">
+    <h2>Signature Details</h2>
+    <div class="row">
+      <label style="flex:1">Signed at (State)
+        <select id="Simple_SignState" class="persist">
+          <option value="">-- Select State --</option>
+          <!-- Same bel set used in your reference -->
+          <option>SELANGOR</option><option>K.LUMPUR</option><option>MELAKA</option><option>JOHOR</option>
+          <option>N.SEMBILAN</option><option>PENANG</option><option>PERAK</option><option>SABAH</option>
+          <option>SARAWAK</option><option>KELANTAN</option><option>PERLIS</option><option>T'GANU</option>
+          <option>PAHANG</option><option>KEDAH</option>
+        </select>
+      </label>
+    </div>
+    <div class="row">
+      <label style="flex:1">Day
+        <select id="Simple_SignDay" class="persist">
+          <option value="">-- Day (DD) --</option>
+          <option>01</option><option>02</option><option>03</option><option>04</option>
+          <option>05</option><option>06</option><option>07</option><option>08</option>
+          <option>09</option><option>10</option><option>11</option><option>12</option>
+          <option>13</option><option>14</option><option>15</option><option>16</option>
+          <option>17</option><option>18</option><option>19</option><option>20</option>
+          <option>21</option><option>22</option><option>23</option><option>24</option>
+          <option>25</option><option>26</option><option>27</option><option>28</option>
+          <option>29</option><option>30</option><option>31</option>
+        </select>
+      </label>
+      <label style="flex:1">Month
+        <select id="Simple_SignMonth" class="persist">
+          <option value="">-- Month --</option>
+          <option>JANUARY</option><option>FEBRUARY</option><option>MARCH</option><option>APRIL</option>
+          <option>MAY</option><option>JUNE</option><option>JULY</option><option>AUGUST</option>
+          <option>SEPTEMBER</option><option>OCTOBER</option><option>NOVEMBER</option><option>DECEMBER</option>
+        </select>
+      </label>
+      <label style="flex:1">Year
+        <select id="Simple_SignYear" class="persist">
+          <option value="">-- Year (YYYY) --</option>
+          <option>2025</option><option>2026</option>
+        </select>
+      </label>
+    </div>
+  </section>
+
+  <!-- SECTION: Owner/Policyowner Signature -->
+  <section class="section">
+    <h2>Signature of Policy Owner</h2>
+    <div class="row">
+      <label style="flex:1">Name of Policyowner
+        <input id="Simple_SignPO_Name" class="persist" type="text" placeholder="Enter name">
+      </label>
+    </div>
+    <div class="row">
+    <label style="flex:1">IC No.
+        <input id="Simple_SignPO_NIRC" class="persist" type="text" placeholder="e.g. 900101-14-1234">
+    </label>
+    </div>
+
+        <div class="sig-preview" id="preview_simple_owner" onclick="openSig('simple_owner')">
+      <span>Tap to Sign (Policyowner)</span>
+    </div>
+    <div class="row">
+      <button id="clearPreview_Simple_Owner" class="secondary" type="button">Clear Signature</button>
+    </div>
+  </section>
+
+  <!-- SECTION: Witness Signature -->
+  <section class="section">
+    <h2>Signature of Witness</h2>
+    <div class="row">
+      <label style="flex:1">Name of Witness
+        <input id="Simple_SignWitness_Name" class="persist" type="text" placeholder="Enter name">
+      </label>
+    </div>
+    <div class="row">
+      <label style="flex:1">IC No.
+        <input id="Simple_SignWitness_NIRC" class="persist" type="text" placeholder="e.g. 800202-08-5678">
+      </label>
+      <label style="flex:1">Mobile No.
+        <input id="Simple_SignWitness_Mobile" class="persist" type="text" placeholder="e.g. 012-23456789">
+      </label>
+    </div>
+
+    <div class="sig-preview" id="preview_simple_witness" onclick="openSig('simple_witness')">
+      <span>Tap to Sign (Witness)</span>
+    </div>
+    <div class="row">
+      <button id="clearPreview_Simple_Witness" class="secondary" type="button">Clear Signature</button>
+    </div>
+  </section>
+  
+    <!-- SECTION: Assignee -->
+  <section class="section">
+    <h2>Signature of Assignee</h2>
+    <div class="row">
+      <label style="flex:1">Name of Assignee
+        <input id="Simple_SignAssignee_Name" class="persist" type="text" placeholder="Enter name">
+      </label>
+    </div>
+    <div class="row">
+    <label style="flex:1">IC No.
+        <input id="Simple_SignAssignee_NIRC" class="persist" type="text" placeholder="e.g. 900101-14-1234">
+    </label>
+    </div>
+
+
+    <div class="sig-preview" id="preview_simple_assignee" onclick="openSig('simple_assignee')">
+      <span>Tap to Sign (Assignee)</span>
+    </div>
+    <div class="row">
+      <button id="clearPreview_Simple_Assignee" class="secondary" type="button">Clear Signature</button>
+    </div>
+  </section>
+    
+    <section class="section actions">
+    <button id="generate">Generate PDF</button>
+    <button id="resetAll" class="secondary">Reset All</button>
+  </section>
+
+  
+    <div id="sigModal" class="sig-modal" aria-hidden="true">
+  <div class="box">
+    <h3 id="sigModalTitle">Draw Signature</h3>
+    <!-- Responsive canvas: internal pixels are set in JS for crispness -->
+    <canvas id="sigCanvas"></canvas>
+    <div class="sig-actions">
+      <button id="sigDone" type="button">Done</button>
+      <button id="sigClear" type="button" class="ghost">Clear</button>
+      <button id="sigCancel" type="button" class="secondary">Cancel</button>
+    </div>
+  </div>
+</div>
+    <div id="saveStatus">Saved</div>
+  </section>
+
+  <button id="scrollTopBtn" onclick="scrollToTop()" aria-label="Back to top">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+    <path fill-rule="evenodd" d="M8 4.354l-5.146 5.147.708.708L8 5.768l4.438 4.441.708-.708z"/>
+  </svg>
+</button>
+
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+<script>
+
+  function $(id) {
+  return document.getElementById(id);
+}
+  
+/* ---------- CONFIG ---------- */
+const PDF_FILENAME = "Request For Change of Customer Details And Payment Method_LF5188_fillable.pdf";
+
+// ----------------- Section inclusion helper -----------------
+const CONTROLLER_BY_SECTION = {
+  UpdateDetails: "Updatedetails",
+  ChangePaymentModeSection: "Changepaymentmode",
+  ChangePaymentMethodSection: "Changepaymentmethod",
+  ChangeSignatureSection: "Changesignature",
+  OtherSection: "Others",
+  UpdateInsuredDetails: "Simple_Update_Insured",
+  UpdatePODetails: "Simple_Update_PO",
+  UpdateNomineeDetails: "Simple_Update_Nominee"
+};
+
+// Returns true if a DOM input (by id) should be exported to the PDF.
+// Walks up the DOM tree: if any ancestor section is controlled by a checkbox
+// that is currently UNchecked, returns false (skip).
+function shouldIncludeFieldByUI(fieldId) {
+  const el = document.getElementById(fieldId);
+  if (!el) return true; // if element isn't present in DOM, include by default
+  let parent = el;
+  while (parent && parent !== document.body) {
+    if (parent.id && CONTROLLER_BY_SECTION[parent.id]) {
+      const controllerId = CONTROLLER_BY_SECTION[parent.id];
+      const cb = document.getElementById(controllerId);
+      if (cb && !cb.checked) return false; // section unticked → skip
+    }
+    parent = parent.parentElement;
+  }
+  return true;
+}
+
+/* ---SAVE STATUS + LOCALSTORAGE (Text, Checkbox, Dropdown) ---------- */
+const saveStatusEl = document.getElementById("saveStatus");
+
+function showSaveStatus(){
+  saveStatusEl.style.opacity = 1;
+  clearTimeout(saveStatusEl._timer);
+  saveStatusEl._timer = setTimeout(()=> saveStatusEl.style.opacity = 0, 1200);
+}
+
+function saveElValue(el){
+  localStorage.setItem(el.id, el.value);
+  showSaveStatus();
+}
+
+function autoBindSave(el) {
+  const saved = localStorage.getItem(el.id);
+
+  // Restore
+  if (el.type === "checkbox") {
+    if (saved !== null) el.checked = (saved === "true");
+  } else if (el.type === "radio") {
+    const savedRadioValue = localStorage.getItem(el.name);
+    if (savedRadioValue) {
+      el.checked = (el.id === savedRadioValue);
+    }
+  } else if (saved !== null) {
+    el.value = saved;
+  }
+
+  // Bind save
+  if (el.tagName === "SELECT") {
+    el.addEventListener("change", () => saveElValue(el));
+  } else if (el.type === "checkbox") {
+    el.addEventListener("change", () => {
+      localStorage.setItem(el.id, el.checked);
+      showSaveStatus();
+    });
+  } else if (el.type === "radio") {
+    el.addEventListener("change", () => {
+      if (el.checked) {
+        localStorage.setItem(el.name, el.id); // store under group name
+        showSaveStatus();
+      }
+    });
+} else {
+  el.addEventListener("input", () => {
+    if (el.id !== "MHSE_Info_POEmail") { //except Email
+      el.value = el.value.toUpperCase();   // update textbox itself
+    }
+    localStorage.setItem(el.id, el.value);
+    showSaveStatus();
+  });
+}
+}
+
+  
+/* ---------- UNIVERSAL HELPER FUNCTION ---------- */
+
+  //Detect input type - text/dropdown/checkbox/radio
+function safeSetField(form, fieldName, value) {
+  if (value === null || value === undefined) return;
+
+  try {
+    let field;
+
+    // text or textarea, then force Uppercase
+    try {
+      field = form.getTextField(fieldName);
+      // Keep original case for email
+      if (fieldName === "MHSE_Info_POEmail") {
+        field.setText(value);
+      } else {
+        field.setText(value.toUpperCase());
+      }
+      return;
+    } catch (e) {}
+
+    // dropdown
+    try {
+      field = form.getDropdown(fieldName);
+      field.select(value);
+      return;
+    } catch (e) {}
+
+    // checkbox
+    try {
+      field = form.getCheckBox(fieldName);
+      if (value === true || value === "true" || value === "on" || value === "checked") {
+        field.check();
+      } else {
+        field.uncheck();
+      }
+      return;
+    } catch (e) {}
+    
+    // radio
+    try {
+      field = form.getRadioGroup(fieldName);
+      field.select(value);
+      return;
+    } catch (e) {}
+
+    console.warn(`Field ${fieldName} not found in PDF`);
+  } catch (err) {
+    console.error(`Error setting field ${fieldName}`, err);
+  }
+}
+
+
+/* ---------- SIGNATURE MODAL LOGIC (Owner + Payor) with HiDPI scaling ---------- */
+let sigTarget = null;
+const sigModal = $("sigModal");
+const sigCanvas = $("sigCanvas");
+const sigCtx = sigCanvas.getContext("2d");
+let drawing = false;
+let scaleX = 1, scaleY = 1;
+
+/* Resize canvas to look crisp on any screen size & DPR */
+function resizeSigCanvas(){
+  const dpr = window.devicePixelRatio || 1;
+  const cssWidth = sigCanvas.clientWidth || sigCanvas.parentElement.clientWidth || 560;
+  const cssHeight = sigCanvas.clientHeight || 220;
+  sigCanvas.width = Math.max(1, Math.floor(cssWidth * dpr));
+  sigCanvas.height = Math.max(1, Math.floor(cssHeight * dpr));
+  sigCtx.setTransform(1,0,0,1,0,0); // reset
+  sigCtx.scale(dpr, dpr);
+  sigCtx.lineWidth = 2;
+  sigCtx.lineCap = "round";
+  sigCtx.strokeStyle = "#000";
+  scaleX = sigCanvas.width / (sigCanvas.getBoundingClientRect().width || cssWidth);
+  scaleY = sigCanvas.height / (sigCanvas.getBoundingClientRect().height || cssHeight);
+  // White background (prevents transparent PNG on PDFs)
+  //sigCtx.fillStyle = "#fff";
+  //sigCtx.fillRect(0,0,sigCanvas.width/scaleX, sigCanvas.height/scaleY);
+}
+
+function openSig(target){
+  sigTarget = target; // 'simple_owner' | 'simple_witness' | 'simple_assignee' | 'simple_oldsig'| 'simple_newsig'
+
+if (target === 'simple_owner') {
+  $("sigModalTitle").textContent = "Sign: Policy Owner";
+} else if (target === 'simple_witness') {
+  $("sigModalTitle").textContent = "Sign: Witness";
+} else if (target === 'simple_assignee') {
+  $("sigModalTitle").textContent = "Sign: Trustee";
+} else if (target === 'simple_oldsig') {
+  $("sigModalTitle").textContent = "Sign: Old Signature";
+} else if (target === 'simple_newsig') {
+  $("sigModalTitle").textContent = "Sign: New Signature";
+}
+
+  sigModal.style.display = "block";
+  sigModal.setAttribute("aria-hidden", "false");
+
+  // Next frame: ensure layout settled then resize canvas
+  requestAnimationFrame(()=>{
+    resizeSigCanvas();
+  sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+  
+    // If there is an existing signature, draw it to current canvas size
+    const existing = localStorage.getItem("sig_"+target);
+    if (existing){
+      const img = new Image();
+      img.onload = ()=>{
+        // cover the canvas area with existing image
+        sigCtx.drawImage(img, 0, 0, sigCanvas.width/scaleX, sigCanvas.height/scaleY);
+      };
+      img.src = existing;
+    }
+  });
+}
+$("sigClear").addEventListener("click", ()=>{
+  sigCtx.clearRect(0,0,sigCanvas.width, sigCanvas.height);
+  // Repaint white bg in CSS pixels
+  //sigCtx.fillStyle="#fff"; sigCtx.fillRect(0,0,sigCanvas.width/scaleX, sigCanvas.height/scaleY);
+});
+$("sigCancel").addEventListener("click", closeSigModal);
+function closeSigModal(){
+  sigModal.style.display = "none";
+  sigModal.setAttribute("aria-hidden", "true");
+  sigTarget = null;
+}
+$("sigDone").addEventListener("click", ()=>{
+  if(!sigTarget) return;
+  const dataURL = sigCanvas.toDataURL("image/png");
+  localStorage.setItem("sig_"+sigTarget, dataURL);
+  const preview = $("preview_"+sigTarget);
+  preview.innerHTML = `<img alt="Signature ${sigTarget}" src="${dataURL}">`;
+  closeSigModal();
+});
+
+/* Drawing (mouse + touch) with coordinate conversion */
+function getPos(e){
+  const rect = sigCanvas.getBoundingClientRect();
+  if(e.touches && e.touches[0]){
+    return { x: (e.touches[0].clientX - rect.left), y: (e.touches[0].clientY - rect.top) };
+  }
+  return { x: (e.clientX - rect.left), y: (e.clientY - rect.top) };
+}
+function startDraw(e){
+  drawing = true;
+  sigCtx.beginPath();
+  const {x,y}=getPos(e);
+  sigCtx.moveTo(x, y);
+  e.preventDefault?.();
+}
+function endDraw(){ drawing = false; sigCtx.beginPath(); }
+function moveDraw(e){
+  if(!drawing) return;
+  const {x,y} = getPos(e);
+  sigCtx.lineTo(x, y);
+  sigCtx.stroke();
+  sigCtx.beginPath();
+  sigCtx.moveTo(x, y);
+  e.preventDefault?.();
+}
+sigCanvas.addEventListener("mousedown", startDraw);
+sigCanvas.addEventListener("mousemove", moveDraw);
+window.addEventListener("mouseup", endDraw);
+sigCanvas.addEventListener("touchstart", startDraw, {passive:false});
+sigCanvas.addEventListener("touchmove", moveDraw, {passive:false});
+sigCanvas.addEventListener("touchend", endDraw);
+window.addEventListener("resize", ()=> {
+  // Only resize when modal is open to avoid reflow glitches
+  if(sigModal.getAttribute("aria-hidden")==="false"){ 
+    const img = new Image();
+    img.onload = ()=>{
+      resizeSigCanvas();
+      sigCtx.drawImage(img, 0, 0, sigCanvas.width/scaleX, sigCanvas.height/scaleY);
+    };
+    img.src = sigCanvas.toDataURL("image/png");
+  }
+});
+
+/* Clear preview buttons + Restore previews on load */
+$("clearPreview_Simple_Owner").addEventListener("click", ()=>{
+  localStorage.removeItem("sig_simple_owner");
+  $("preview_simple_owner").innerHTML = `<span>Tap to Sign (Owner)</span>`;
+});
+$("clearPreview_Simple_Witness").addEventListener("click", ()=>{
+  localStorage.removeItem("sig_simple_witness");
+  $("preview_simple_witness").innerHTML = `<span>Tap to Sign (Witness)</span>`;
+});
+$("clearPreview_Simple_Assignee").addEventListener("click", ()=>{
+  localStorage.removeItem("sig_simple_assignee");
+  $("preview_simple_assignee").innerHTML = `<span>Tap to Sign (Assignee)</span>`;
+});
+$("clearPreview_Simple_Oldsig").addEventListener("click", ()=>{
+  localStorage.removeItem("sig_simple_oldsig");
+  $("preview_simple_oldsig").innerHTML = `<span>Tap to Sign (Old Signature)</span>`;
+});
+$("clearPreview_Simple_Newsig").addEventListener("click", ()=>{
+  localStorage.removeItem("sig_simple_newsig");
+  $("preview_simple_newsig").innerHTML = `<span>Tap to Sign (New Signature)</span>`;
+});
+window.addEventListener("DOMContentLoaded", ()=>{
+  ["owner","witness","assignee","oldsig","newsig"].forEach(role=>{
+    const saved = localStorage.getItem("sig_simple_"+role);
+    if(saved){ $("preview_simple_"+role).innerHTML = `<img alt="Signature ${role}" src="${saved}">`; }
+  });
+});
+  
+
+/* ---------- GENERATE PDF ---------- */
+async function fillPDF(){
+  try {
+    $("generate").disabled = true;
+
+    const res = await fetch(PDF_FILENAME);
+    if (!res.ok) throw new Error("Cannot load PDF: " + PDF_FILENAME);
+    const bytes = await res.arrayBuffer();
+    const pdfDoc = await PDFLib.PDFDocument.load(bytes);
+    const form = pdfDoc.getForm();
+
+    const pages = pdfDoc.getPages();
+    const page = pages[1]; // use 2nd page
+
+    /* ===== RADIO (UI) -> PDF CHECKBOX (fields) MAPPING ===== */
+// helper to map a radio group (saved under groupName) to a list of PDF checkbox field names
+function mapRadioGroupToPdfCheckboxes(groupName, pdfCheckboxNames, controllerCheckboxId) {
+  // If controller is provided and it's unticked, clear PDF checkboxes and return
+  if (controllerCheckboxId) {
+    const ctrl = document.getElementById(controllerCheckboxId);
+    if (ctrl && !ctrl.checked) {
+      pdfCheckboxNames.forEach(fieldName => {
+        try { form.getCheckBox(fieldName).uncheck(); } catch (e) {}
+      });
+      return;
+    }
+  }
+
+  // Otherwise set according to saved radio choice
+  const selectedId = localStorage.getItem(groupName);
+  pdfCheckboxNames.forEach(fieldName => {
+    try {
+      const field = form.getCheckBox(fieldName);
+      if (fieldName === selectedId) field.check();
+      else field.uncheck();
+    } catch (e) {
+      console.warn(`Checkbox field ${fieldName} not found in PDF`);
+    }
+  });
+}
+    
+// replace your previous calls with these:
+mapRadioGroupToPdfCheckboxes("Paymentmodetype", [
+  "Simple_Payment_Annual",
+  "Simple_Payment_SemiAnnual",
+  "Simple_Payment_Quarterly",
+  "Simple_Payment_Monthly"
+], "Changepaymentmode");
+
+mapRadioGroupToPdfCheckboxes("Paymentmethodtype", [
+  "Simple_Payment_FPX",
+  "Simple_Payment_Internet"
+], "Changepaymentmethod");
+
+mapRadioGroupToPdfCheckboxes("Changesignature", [
+  "Simple_ChangeSig_Insured",
+  "Simple_ChangeSig_Assignee",
+  "Simple_ChangeSig_PO",
+  "Simple_ChangeSig_Trustee"
+], "Changesignature");
+/* ===== end mapping ===== */
+
+ 
+
+    // FILL FORM FIELDS FROM LOCALSTORAGE HERE
+const fieldNames = [
+  "Simple_BasicInfo_InsuredName",
+  "Simple_BasicInfo_PolicyNo",
+  "Simple_BasicInfo_InsuredNIRC",
+  "Simple_Update_Name",
+  "Simple_Update_Insured",
+  "Simple_Update_InsuredName",
+  "Simple_Update_DOB",
+  "Simple_Update_PO",
+  "Simple_Update_Nominee",
+  "Simple_Update_NIRC",
+  "Simple_Update_Sex",
+  "Simple_Update_Country",
+  "Simple_Update_Nationality",
+  "Simple_Update_InsuredDOB",
+  "Simple_Update_InsuredNIRC",
+  "Simple_Update_InsuredSex",
+  "Simple_Update_InsuredCountry",
+  "Simple_Update_InsuredNationality",
+  "Simple_Update_POName",
+  "Simple_Update_PODOB",
+  "Simple_Update_PONIRC", 
+  "Simple_Update_POSex", 
+  "Simple_Update_POCountry",
+  "Simple_Update_PONationality",
+  "Simple_Update_NomineeName",
+  "Simple_Update_NomineeDOB",
+  "Simple_Update_NomineeNIRC",
+  "Simple_Update_NomineeSex",
+  "Simple_Update_NomineeCountry",
+  "Simple_Update_NomineeNationality",
+  "Simple_Update_Others_Line1",
+  "Simple_Update_Others_Line2",
+  "Simple_Update_Others_Line3",
+  "Simple_Update_Others_Line4",
+  "Simple_SignState",
+  "Simple_SignDay",
+  "Simple_SignMonth",
+  "Simple_SignYear",
+  "Simple_SignPO_Name",
+  "Simple_SignPO_NIRC",
+  "Simple_SignAssignee_Name",
+  "Simple_SignAssignee_NIRC",
+  "Simple_SignWitness_Name",
+  "Simple_SignWitness_NIRC",
+  "Simple_SignWitness_Mobile"
+];
+
+fieldNames.forEach(fieldName => {
+  // If the UI section containing this field is currently unticked, skip it.
+  if (!shouldIncludeFieldByUI(fieldName)) return;
+
+  const value = localStorage.getItem(fieldName);
+  safeSetField(form, fieldName, value);
+});
+    
+    /* --------- SIGNATURE IMAGE EMBEDDING (embedPng + drawImage) --------- */
+
+// Owner signature FillPDF
+const sig_Simple_Owner = localStorage.getItem("sig_simple_owner");
+if (sig_Simple_Owner) {
+  try {
+    const img_Simple_Owner = await pdfDoc.embedPng(sig_Simple_Owner);
+    const { width, height } = img_Simple_Owner.size();
+
+    const previewEl = document.getElementById("preview_simple_owner");
+    const boxW = previewEl.offsetWidth;
+    const boxH = previewEl.offsetHeight;
+
+    const scale = Math.min(boxW / width, boxH / height);
+    let drawW = width * scale;
+    let drawH = height * scale;
+
+    const factor = 0.40;    // % scale
+    const posX = 50;         // X position on PDF
+    const posY = 300;        // Y position on PDF
+
+    drawW *= factor;
+    drawH *= factor;
+
+    page.drawImage(img_Simple_Owner, {
+      x: posX,
+      y: posY,
+      width: drawW,
+      height: drawH
+    });
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+// Witness signature FillPDF
+const sig_Simple_Witness = localStorage.getItem("sig_simple_witness");
+if (sig_Simple_Witness) {
+  try {
+    const img_Simple_Witness = await pdfDoc.embedPng(sig_Simple_Witness);
+    const { width, height } = img_Simple_Witness.size();
+
+    const previewEl = document.getElementById("preview_simple_witness");
+    const boxW = previewEl.offsetWidth;
+    const boxH = previewEl.offsetHeight;
+
+    const scale = Math.min(boxW / width, boxH / height);
+    let drawW = width * scale;
+    let drawH = height * scale;
+
+    const factor = 0.40;    // % scale
+    const posX = 410;         // X position on PDF
+    const posY = 300;        // Y position on PDF
+
+    drawW *= factor;
+    drawH *= factor;
+
+    page.drawImage(img_Simple_Witness, {
+      x: posX,
+      y: posY,
+      width: drawW,
+      height: drawH
+    });
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+
+// Assignee signature FillPDF
+const sig_Simple_Assignee = localStorage.getItem("sig_simple_assignee");
+if (sig_Simple_Assignee) {
+  try {
+    const img_Simple_Assignee = await pdfDoc.embedPng(sig_Simple_Assignee);
+    const { width, height } = img_Simple_Assignee.size();
+
+    const previewEl = document.getElementById("preview_simple_assignee");
+    const boxW = previewEl.offsetWidth;
+    const boxH = previewEl.offsetHeight;
+
+    const scale = Math.min(boxW / width, boxH / height);
+    let drawW = width * scale;
+    let drawH = height * scale;
+
+    const factor = 0.40;    // % scale
+    const posX = 230;         // X position on PDF
+    const posY = 300;        // Y position on PDF
+
+    drawW *= factor;
+    drawH *= factor;
+
+    page.drawImage(img_Simple_Assignee, {
+      x: posX,
+      y: posY,
+      width: drawW,
+      height: drawH
+    });
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+    // Oldsig signature FillPDF
+const sig_Simple_Oldsig = localStorage.getItem("sig_simple_oldsig");
+if (sig_Simple_Oldsig) {
+  try {
+    const img_Simple_Oldsig = await pdfDoc.embedPng(sig_Simple_Oldsig);
+    const { width, height } = img_Simple_Oldsig.size();
+
+    const previewEl = document.getElementById("preview_simple_oldsig");
+    const boxW = previewEl.offsetWidth;
+    const boxH = previewEl.offsetHeight;
+
+    const scale = Math.min(boxW / width, boxH / height);
+    let drawW = width * scale;
+    let drawH = height * scale;
+
+    const factor = 0.40;    // % scale
+    const posX = 75;         // X position on PDF
+    const posY = 650;        // Y position on PDF
+
+    drawW *= factor;
+    drawH *= factor;
+
+    page.drawImage(img_Simple_Oldsig, {
+      x: posX,
+      y: posY,
+      width: drawW,
+      height: drawH
+    });
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+    // Newsig signature FillPDF
+const sig_Simple_Newsig = localStorage.getItem("sig_simple_newsig");
+if (sig_Simple_Newsig) {
+  try {
+    const img_Simple_Newsig = await pdfDoc.embedPng(sig_Simple_Newsig);
+    const { width, height } = img_Simple_Newsig.size();
+
+    const previewEl = document.getElementById("preview_simple_newsig");
+    const boxW = previewEl.offsetWidth;
+    const boxH = previewEl.offsetHeight;
+
+    const scale = Math.min(boxW / width, boxH / height);
+    let drawW = width * scale;
+    let drawH = height * scale;
+
+    const factor = 0.40;    // % scale
+    const posX = 390;         // X position on PDF
+    const posY = 650;        // Y position on PDF
+
+    drawW *= factor;
+    drawH *= factor;
+
+    page.drawImage(img_Simple_Newsig, {
+      x: posX,
+      y: posY,
+      width: drawW,
+      height: drawH
+    });
+  } catch (e) {
+    console.error(e);
+  }
+}
+    
+    // Flatten form fields before saving
+    form.flatten();
+    
+    // Save & download FillPDF
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "Filled_RFC_Simple_Change.pdf"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=> URL.revokeObjectURL(url), 2500);
+
+  } catch(err){
+    alert("PDF generation failed: " + (err.message || err));
+    console.error(err);
+  } finally {
+    $("generate").disabled = false;
+  }
+}
+
+
+/* ---------- RESET ALL DATA function ---------- */
+function resetAll() {
+  if (!confirm("Are you sure you want to reset the form? All saved data will be cleared.")) {
+    return;
+  }
+
+  // 1) Clear ALL saved keys
+  localStorage.clear();
+
+  // 2) Clear the live UI values (inputs, checkboxes, radios, selects, textareas)
+  document.querySelectorAll("input, select, textarea").forEach(el => {
+    if (!el.id) return;
+    if (el.type === "checkbox" || el.type === "radio") {
+      el.checked = false;
+    } else {
+      el.value = "";
+    }
+  });
+
+  // 3) Reset signature previews
+  $("preview_simple_owner").innerHTML   = `<span>Tap to Sign (Policy Owner)</span>`;
+  $("preview_simple_witness").innerHTML = `<span>Tap to Sign (Witness)</span>`;
+  $("preview_simple_assignee").innerHTML = `<span>Tap to Sign (Assignee)</span>`;
+  $("preview_simple_oldsig").innerHTML  = `<span>Tap to Sign (Old Signature)</span>`;
+  $("preview_simple_newsig").innerHTML  = `<span>Tap to Sign (New Signature)</span>`;
+
+  // 4) Update status text if you have it
+  showSaveStatus();
+}
+
+  /* ---------- Wire buttons ---------- */
+$("generate").addEventListener("click", fillPDF);
+$("resetAll").addEventListener("click", resetAll);
+document.querySelectorAll(".persist").forEach(autoBindSave);
+
+
+// ---------- SECTION TOGGLE LOGIC ----------
+document.addEventListener("DOMContentLoaded", () => {
+  // Utility: enable/disable all inputs in a section
+  function setSectionEnabled(sectionEl, enabled) {
+    if (!sectionEl) return;
+    const inputs = sectionEl.querySelectorAll("input, select, textarea");
+    inputs.forEach(el => el.disabled = !enabled);
+  }
+
+  // Map each controlling checkbox → section
+  const sectionMap = {
+    "Updatedetails": "UpdateDetails",
+    "Changepaymentmode": "ChangePaymentModeSection",
+    "Changepaymentmethod": "ChangePaymentMethodSection",
+    "Changesignature": "ChangeSignatureSection",
+    "Others": "OtherSection"
+  };
+
+  // Toggle logic
+  Object.keys(sectionMap).forEach(cbId => {
+    const cb = $(cbId);
+    const sec = $(sectionMap[cbId]);
+    if (!cb || !sec) return;
+
+    // Initial state
+    sec.style.display = cb.checked ? "block" : "none";
+    setSectionEnabled(sec, cb.checked);
+
+    // On change
+    cb.addEventListener("change", () => {
+      sec.style.display = cb.checked ? "block" : "none";
+      setSectionEnabled(sec, cb.checked);
+    });
+  });
+
+  // Nested role sections (inside UpdateDetails)
+  const roleMap = {
+    "Simple_Update_Insured": "UpdateInsuredDetails",
+    "Simple_Update_PO": "UpdatePODetails",
+    "Simple_Update_Nominee": "UpdateNomineeDetails"
+  };
+
+  Object.keys(roleMap).forEach(cbId => {
+    const cb = $(cbId);
+    const sec = $(roleMap[cbId]);
+    if (!cb || !sec) return;
+
+    sec.style.display = cb.checked ? "block" : "none";
+    setSectionEnabled(sec, cb.checked);
+
+    cb.addEventListener("change", () => {
+      sec.style.display = cb.checked ? "block" : "none";
+      setSectionEnabled(sec, cb.checked);
+    });
+  });
+});
+
+  // Show button when user scrolls down
+window.addEventListener("scroll", () => {
+  const btn = document.getElementById("scrollTopBtn");
+  if (document.documentElement.scrollTop > 200 || document.body.scrollTop > 200) {
+    btn.classList.add("show");
+  } else {
+    btn.classList.remove("show");
+  }
+});
+
+// Smooth scroll to top
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+  
+</script>
+</main> 
+</body>
+</html>
