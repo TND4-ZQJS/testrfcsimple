@@ -628,6 +628,21 @@ function safeSetField(form, fieldName, value) {
   }
 }
 
+  // Helper to map multiple role checkboxes → one shared PDF checkbox
+function mapSharedCheckboxToPdf(pdfDoc, pdfFieldName, htmlIds) {
+  const anyChecked = htmlIds.some(id => {
+    const el = document.getElementById(id);
+    return el && el.checked;
+  });
+  try {
+    const field = pdfDoc.getForm().getCheckBox(pdfFieldName);
+    if (anyChecked) field.check();
+    else field.uncheck();
+  } catch (e) {
+    console.warn(`PDF checkbox ${pdfFieldName} not found`);
+  }
+}
+
 
 /* ---------- SIGNATURE MODAL LOGIC (Owner + Payor) with HiDPI scaling ---------- */
 let sigTarget = null;
@@ -811,20 +826,6 @@ function mapRadioGroupToPdfCheckboxes(groupName, pdfCheckboxNames, controllerChe
     }
   }
 
-  // Helper to map multiple role checkboxes → one shared PDF checkbox
-function mapSharedCheckboxToPdf(pdfDoc, pdfFieldName, htmlIds) {
-  const anyChecked = htmlIds.some(id => {
-    const el = document.getElementById(id);
-    return el && el.checked;
-  });
-  try {
-    const field = pdfDoc.getForm().getCheckBox(pdfFieldName);
-    if (anyChecked) field.check();
-    else field.uncheck();
-  } catch (e) {
-    console.warn(`PDF checkbox ${pdfFieldName} not found`);
-  }
-}
   
   // Otherwise set according to saved radio choice
   const selectedId = localStorage.getItem(groupName);
