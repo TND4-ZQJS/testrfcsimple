@@ -827,6 +827,33 @@ window.addEventListener("DOMContentLoaded", ()=>{
     if(saved){ $("preview_simple_"+role).innerHTML = `<img alt="Signature ${role}" src="${saved}">`; }
   });
 });
+
+//Policyowner Same As Insured checkbox logic
+document.getElementById('same_as_insured').addEventListener('change', function() {
+    // Get the source elements (Insured)
+    const insuredName = document.getElementById('Simple_BasicInfo_InsuredName');
+    const insuredIC = document.getElementById('Simple_BasicInfo_InsuredNIRC');
+    
+    // Get the target elements (Policyowner)
+    const poName = document.getElementById('Simple_SignPO_Name');
+    const poIC = document.getElementById('Simple_SignPO_NIRC');
+
+    if (this.checked) {
+        // Copy the values
+        poName.value = insuredName.value;
+        poIC.value = insuredIC.value;
+        
+        // Optional: Make PO fields read-only while ticked to prevent confusion
+        poName.readOnly = true;
+        poIC.readOnly = true;
+    } else {
+        // Clear values and allow editing if unticked
+        poName.value = "";
+        poIC.value = "";
+        poName.readOnly = false;
+        poIC.readOnly = false;
+    }
+});
   
 
 /* ---------- GENERATE PDF ---------- */
