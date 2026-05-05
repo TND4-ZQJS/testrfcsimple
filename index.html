@@ -67,6 +67,14 @@
   opacity: 1;
 }
 
+  input[readonly] {
+  background: #f2f2f2;
+  color: #555;
+  cursor: not-allowed;
+  border: 1px solid #ddd; /* Makes the border look softer/disabled */
+  outline: none;          /* Prevents the blue focus ring if clicked */
+}
+
 
   /* Signature preview tiles */
   .sig-preview{
@@ -828,7 +836,7 @@ window.addEventListener("DOMContentLoaded", ()=>{
   });
 });
 
-//Policyowner Same As Insured checkbox logic
+// Policyowner Same As Insured checkbox logic
 document.getElementById('same_as_insured').addEventListener('change', function() {
     // Get the source elements (Insured)
     const insuredName = document.getElementById('Simple_BasicInfo_InsuredName');
@@ -839,19 +847,29 @@ document.getElementById('same_as_insured').addEventListener('change', function()
     const poIC = document.getElementById('Simple_SignPO_NIRC');
 
     if (this.checked) {
-        // Copy the values
+        // 1. Copy the values
         poName.value = insuredName.value;
         poIC.value = insuredIC.value;
         
-        // Optional: Make PO fields read-only while ticked to prevent confusion
+        // 2. Lock the fields
         poName.readOnly = true;
         poIC.readOnly = true;
+
+        // 3. FORCE SAVE TO LOCAL STORAGE
+        // Manually trigger 'input' so the persistence script detects the change
+        poName.dispatchEvent(new Event('input', { bubbles: true }));
+        poIC.dispatchEvent(new Event('input', { bubbles: true }));
+
     } else {
         // Clear values and allow editing if unticked
         poName.value = "";
         poIC.value = "";
         poName.readOnly = false;
         poIC.readOnly = false;
+
+        // Force save the "empty" state as well
+        poName.dispatchEvent(new Event('input', { bubbles: true }));
+        poIC.dispatchEvent(new Event('input', { bubbles: true }));
     }
 });
   
